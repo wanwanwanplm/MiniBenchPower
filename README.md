@@ -1,7 +1,7 @@
 # 迷你数控电源（Mini Bench Power Supply）
 基于 STM32F103C8T6 + FreeRTOS 的数控可调直流电源，采用 Boost + Buck + 线性
 三级功率架构，输出 0~28V / 0~3A / 84W。
-覆盖 MCU 外设、RTOS 任务调度、PID 闭环控制、ADC/DMA/I²C、以及电源硬件设计。
+覆盖 MCU 外设、RTOS 任务调度、PID 闭环控制、ADC/DMA/I²C、以及电源硬件设计、四层PCB设计。
 视频：https://www.bilibili.com/video/BV1yC8H67E52/?spm_id_from=333.1387.homepage.video_card.click
 ## 硬件规格
 | 项目 | 参数 |
