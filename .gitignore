@@ -1,0 +1,35 @@
+# ===== Keil MDK5 构建产物 (不要提交) =====
+Project/Objects/
+Project/Listings/
+Project/DebugConfig/
+RTE/
+
+*.o
+*.d
+*.crf
+*.o.crf
+*.axf
+*.elf
+*.map
+*.lst
+*.lnp
+*.htm
+*.dep
+*.iex
+*.sct
+*.build_log.htm
+*.scvd
+*.bak
+
+# Keil 用户专属界面布局 (含本机用户名, 不要传)
+*.uvguix.*
+
+# ===== 调试器/系统 =====
+JLinkLog.txt
+JLinkSettings.ini
+*.ini
+
+# ===== 其他系统文件 =====
+Thumbs.db
+Desktop.ini
+.DS_Store
