@@ -59,3 +59,6 @@ DC_IN ─ Boost(XL6019,固定33V) ─ Buck(XL4016,预稳压) ─ Linear(IRF9540,
 
 ## 功能特性
 0~28V 连续可调、恒压/恒流自动切换、软启动、多重保护、串口上位机控制
+<img width="4096" height="3072" alt="8094dd5de36f2e7a44771eaa5f32de42" src="https://github.com/user-attachments/assets/395863d6-c66f-489b-9bee-f6454c72f91b" />
+<img width="4341" height="2860" alt="aedecb75b73e665c6b1f76f29211a069" src="https://github.com/user-attachments/assets/fb3fe498-ae71-402f-8bdd-362ee19dfde9" />
+<img width="1547" height="1414" alt="dcd6b78248e38cdc11989b7403251a19" src="https://github.com/user-attachments/assets/4e594a31-04b5-4567-9a1f-a59bf7ea4f65" />
