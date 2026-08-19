@@ -30,15 +30,11 @@ DC_IN ─ Boost(XL6019,固定33V) ─ Buck(XL4016,预稳压) ─ Linear(IRF9540,
 
 #数据流
 ADC DMA 半传输/传输完成中断
-    │
-    ▼
 vTaskADC: 滤波 + 物理量换算 → AppState_UpdateADC()
-    │
-    ├──→ vTaskPID:   AppState_GetADC() → PID 计算 → DAC_SetBoth()
-    ├──→ vTaskUI:    AppState_GetADC() → TFT_DrawMainScreen()
-    ├──→ vTaskComm:  AppState_GetADC() → CMD_READ_DATA 响应
-    └──→ vTaskMonitor: AppState_GetADC() → 输入/温度软告警
-
+     vTaskPID:   AppState_GetADC() → PID 计算 → DAC_SetBoth()
+     vTaskUI:    AppState_GetADC() → TFT_DrawMainScreen()
+     vTaskComm:  AppState_GetADC() → CMD_READ_DATA 响应
+     vTaskMonitor: AppState_GetADC() → 输入/温度软告警
 设定值流（反向）:
     vTaskUI / vTaskComm → AppState_SetSetting() → vTaskPID 读取
 
