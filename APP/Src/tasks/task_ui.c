@@ -195,6 +195,7 @@ void vTaskUI(void *argument)
             /* 双击: 清除故障 (查/清都用全局唯一 ctx, #11) */
             if (Protect_HasFault(ctx)) {
                 Protect_ClearFaults(ctx);
+							  TFT_FillScreen(TFT_COLOR_BLACK);
             }
             break;
 

@@ -89,8 +89,6 @@ void ADC_DMA_Init(ADC_Buffer_t *adc_buffer);
  * 输出：无
  * 调用时机：任务层创建队列后、ADC_DMA_Start 之前。
  * 副作用：保存队列句柄到驱动内部。
- *
- * ⚠️ 替代了旧的 ADC_DMA_SetSemaphore (二值信号量方案已因竞态废弃, 见 #16)。
  */
 void ADC_DMA_SetEventQueue(QueueHandle_t event_queue);
 

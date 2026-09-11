@@ -10,12 +10,9 @@
  *
  * SPI 底层：SPI1 Mode 3 (CPOL=1,CPHA=1), 18MHz, 仅 MOSI 写。
  *   CS/DC/RST/BL 用软件 GPIO 控制。
- *
- * ⚠️ 句柄单一来源 (根治 #7): 删除原 static SPI_HandleTypeDef hspi1,
- *    改用 main.c 定义、main.h extern 的全局 hspi1。
  */
 
-#include "main.h"             /* extern SPI_HandleTypeDef hspi1 (句柄单一来源) */
+#include "main.h"             /* extern SPI_HandleTypeDef hspi1*/
 #include "tft_st7735.h"
 #include "stm32f1xx_hal.h"
 #include <string.h>

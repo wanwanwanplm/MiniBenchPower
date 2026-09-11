@@ -59,14 +59,6 @@ void RingBuffer_Init(RingBuffer_t *rb)
 
 /**
  * 环形缓冲区写入（ISR 安全）
- *
- * 为什么 ISR 安全？
- *   只有 ISR (生产者) 会修改 head。
- *   只有任务 (消费者) 会修改 tail。
- *   没有并发写同一个变量的情况 → 不需要锁。
- *
- *   面试可能问：如果多个 ISR 都写怎么办？
- *   答：那就需要关中断保护。但本项目只有 USART1 ISR 会写。
  */
 uint8_t RingBuffer_Write(RingBuffer_t *rb, uint8_t data)
 {

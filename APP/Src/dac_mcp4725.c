@@ -8,14 +8,9 @@
  *
  * I²C 总线：PB6(SCL) + PB7(SDA), 400kHz Fast Mode
  * 写模式：Fast Write Mode (2 数据字节), ~68μs/次
- *
- * ⚠️ 句柄单一来源：
- *   本文件不再定义 static I2C_HandleTypeDef hi2c1。所有 I²C 操作都作用于
- *   main.c 定义、main.h 用 extern 导出的全局 hi2c1。若各处各留一份 static
- *   句柄副本, 会出现"配置了这份、操作的却是那份"的诡异 bug (根治 #7 类问题)。
  */
 
-#include "main.h"             /* extern I2C_HandleTypeDef hi2c1 (句柄单一来源) */
+#include "main.h"             /* extern I2C_HandleTypeDef hi2c1*/
 #include "i2c.h"
 #include "dac_mcp4725.h"
 #include "stm32f1xx_hal.h"
@@ -45,7 +40,7 @@ static uint32_t g_last_i2c_reset_tick = 0;
  * 调用时机：DACx_SetCode / DAC_SetBoth / DAC_PowerOnZero 内部。
  * 副作用：一次 I²C 主机发送; 失败时调用 DAC_I2C_SoftwareReset。
  *
- * 🔧 位打包 (问题 #1 核心修正), 依据 MCP4725 datasheet Figure 6-2:
+ * 🔧 位打包, 依据 MCP4725 datasheet Figure 6-2:
  *   字节1 = [ 0 0 PD1 PD0 D11 D10 D9 D8 ]  正常模式 PD=00
  *   字节2 = [ D7 D6 D5 D4 D3 D2 D1 D0 ]
  */
@@ -112,7 +107,6 @@ uint8_t DAC_PowerOnZero(void)
     /*
      * Step 2: DAC#1 写 DAC1_MAX_CODE → V_DAC1 最大 → V_buck 最低 (反比)。
      *   减小上电后 Buck 母线残压, 降低后续软启动冲击。
-     *   [问题修正] 原来写魔法数 4000, 现改用 DAC1_MAX_CODE 宏 (=4000), 语义清晰。
      */
     if (DAC_WriteCode(DAC1_WRITE_ADDR, DAC1_MAX_CODE) != 0) {
         result |= 0x01;  /* bit0: DAC#1 失败 */
@@ -137,8 +131,7 @@ uint8_t DAC1_SetCode(uint16_t code)
 uint8_t DAC2_SetCode(uint16_t code)
 {
     /*
-     * 【v2.0】线性栅极控制限幅至 DAC2_MAX_CODE=3475 (对应 V_out ≈ 28V)。
-     * 硬件假设来源：docs/04-hardware-interface.md 第 4.2 节 (v2.0)
+     * 线性栅极控制限幅至 DAC2_MAX_CODE=3475 (对应 V_out ≈ 28V)。
      */
     if (code > DAC2_MAX_CODE) {
         code = DAC2_MAX_CODE;

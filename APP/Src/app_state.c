@@ -23,50 +23,14 @@
  *   💻 本模块选择：
  *      setting/calib  → Mutex   (低频，UI/Comm 写、PID 读，拷贝可容忍阻塞)
  *      adc_data       → 临界区   (高频 1ms，拷贝 20 字节耗时极短，用锁太重)
- *
- *   ⚠️ 常见坑：
- *      - 在 ISR 里调用 xSemaphoreTake → 直接把系统搞挂 (ISR 不能阻塞)。
- *      - 临界区里做耗时操作(如浮点循环) → 中断延迟飙升，实时性崩溃。
- *      - 忘记 Give 锁 → 死锁，其他任务永远拿不到。
- *
- * ============================================================================
- * 🔧 ISR 安全：为什么硬件 OVP 标志只用 volatile 裸变量？
- * ============================================================================
- *   g_hw_ovp_flag 由 EXTI4 ISR (优先级 3，高于 FreeRTOS 阈值) 置位。
- *   该 ISR 内：
- *     - 不能用 Mutex/临界区之外的 FreeRTOS API (优先级超阈值，行为未定义)；
- *     - 只做最少动作：把一个 volatile uint8_t 置 1。
- *   uint8_t 写入在 Cortex-M3 上是单条 STRB 指令，天然原子，无需加锁。
- *   volatile 保证编译器每次都从内存真实读写、不做寄存器缓存优化，
- *   使 Monitor 任务轮询时一定能看到 ISR 刚写的值。
- *   之后由 vTaskMonitor 轮询该标志，再合并进 ProtectContext (置故障+锁存)。
- *   —— 这是嵌入式经典范式："ISR 只置标志，重活留给任务"。
- *
- * ============================================================================
- * 🔧 v2 修正: 互斥锁"懒创建"
- * ============================================================================
- *   问题：xSemaphoreCreateMutex/CreateMutexStatic 在 osKernelStart() 前调用
- *   会触发 configASSERT 崩溃 (HardFault → 白屏)。
- *
- *   解法：
- *     1. AppState_Init() 只初始化数据，不创建锁（此时单线程安全）。
- *     2. Get/Set 内做 if(g_state_mutex) 判空：空 → 直接读写字面，不空 → 锁保护。
- *     3. 调度器启动后由 taskUI 调用 AppState_EnsureMutex() 建锁。
- *     4. 建锁后所有路径自动切换到加锁模式。
- *
- *   安全性论证：
- *     - 建锁前：仅 main() 单线程 + taskUI 单任务 (其他 4 任务未创建)。
- *       taskUI 第一个动作是 EnsureMutex，建锁后才进主循环，
- *       因此不存在"一任务持锁、另一任务无锁越权"的窗口。
- *     - 建锁后：所有 Get/Set 走锁路径，和原设计完全一致。
  */
 
 /* --- MISRA-C: 所有 #include 集中放文件顶部 --- */
-#include "app_state.h"      /* 本模块对外接口 + 已间接包含 app_config/protect/FreeRTOS/semphr */
+#include "app_state.h"      
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "task.h"           /* taskENTER_CRITICAL / taskEXIT_CRITICAL */
-#include <string.h>         /* memcpy: 结构体整体拷贝，保证快照一致性 */
+#include <string.h>        
 
 /*===========================================================================
  * 内部全局状态 (唯一实例，全部 static —— 外部只能经接口访问)
@@ -79,7 +43,7 @@ static SystemSetting_t   g_setting;
 static ADCData_t         g_adc_data;
 
 /* 全局唯一保护上下文，经 AppState_GetProtectCtx 交出指针，
-   内容并发安全由"Monitor 单线程访问约定"负责 (见 .h 说明) */
+   内容并发安全由"Monitor 单线程访问约定"负责 */
 static ProtectContext_t  g_protect_ctx;
 
 /* 校准系数，Mutex 保护 */
@@ -88,7 +52,7 @@ static Calibration_t     g_calib;
 /*
  * 状态互斥锁：保护 g_setting 与 g_calib。
  * 二者共用一把锁足矣 —— 访问都是低频，锁竞争极低，省一个内核对象。
- * v2: 锁改为"懒创建" (调度器启动前 = NULL, 启动后由 EnsureMutex 赋值)。
+ * 锁改为"懒创建" (调度器启动前 = NULL, 启动后由 EnsureMutex 赋值)。
  */
 static StaticSemaphore_t g_state_mutex_buffer;
 static SemaphoreHandle_t g_state_mutex = NULL;

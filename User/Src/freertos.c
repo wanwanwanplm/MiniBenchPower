@@ -109,12 +109,6 @@ void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName);
 /* USER CODE BEGIN 4 */
 /**
  * @brief Idle 任务内存分配 (静态分配)
- *
- * 调用者: FreeRTOS 内核自动调用 (当 configSUPPORT_STATIC_ALLOCATION=1 时)。
- * 不提供此函数且 configSUPPORT_STATIC_ALLOCATION=1 → 链接报错或 Idle 创建失败。
- * 本函数不依赖动态堆, Idle 栈用 static 数组, 固定 configMINIMAL_STACK_SIZE words。
- * 若 FreeRTOSConfig.h 中 configSUPPORT_STATIC_ALLOCATION=0,
- * 此函数完全不会被调用 —— FreeRTOS 改用 pvPortMalloc 从堆里分配 Idle 栈。
  */
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
                                    StackType_t **ppxIdleTaskStackBuffer,
@@ -130,10 +124,6 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer,
 
 /**
  * @brief 定时器任务内存分配 (软件定时器守护任务的静态内存)
- *
- * [批次5 修正 #6] 原实现函数体为空, 三个出参指针未赋值 → 若 configUSE_TIMERS=1
- * 且用静态分配, FreeRTOS 会解引用野指针 → HardFault。这里正确填充静态内存。
- * 仿照 Idle 钩子, 用静态 TCB + 栈 (Timer 栈用 configTIMER_TASK_STACK_DEPTH)。
  */
 void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
                                     StackType_t **ppxTimerTaskStackBuffer,
@@ -149,23 +139,6 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer,
 
 /**
  * @brief 栈溢出钩子
- *
- * 当 FreeRTOS 检测到任务栈溢出时调用此函数。
- * 栈溢出是嵌入式系统最常见的 bug 之一。
- *
- * 【面试可能问】如何检测和调试栈溢出？
- *   答：
- *   1. 使能 configCHECK_FOR_STACK_OVERFLOW (设为 1 或 2)
- *   2. 实现此钩子函数（设断点/记录日志）
- *   3. 使用 uxTaskGetStackHighWaterMark 监控栈使用峰值
- *   4. 常见原因：
- *      a. 栈大小设太小
- *      b. 递归调用过深
- *      c. 局部变量太大（大数组放栈上）
- *      d. sprintf 等不检查边界的函数
- *      e. 浮点运算：Cortex-M3 无 FPU，浮点用软件模拟栈可能很大
- *
- * 本项目 PID 计算用 float（软件浮点），所以 PID 任务栈设了 512 words。
  */
 void vApplicationStackOverflowHook(xTaskHandle xTask, signed char *pcTaskName)
 {

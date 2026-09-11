@@ -1,6 +1,7 @@
-/* 实现 ADC 驱动核心功能：
+/* adc.dma.c
+ * 实现 ADC 驱动核心功能：
  *   1. 4 通道规则组 DMA 循环采样 (V_OUT, I_OUT, V_IN, TEMP)
- *   V_IN 监测 Boost 前输入电压 (5~20V), 分压比 1/7.25
+ *      V_IN 监测 Boost 前输入电压 (5~20V), 分压比 1/7.25
  *   2. 中值 + 均值滤波 (抗噪声)
  *   3. 物理量转换 (ADC 码值 → V/A/°C) + 上报 AppState
  *
@@ -8,13 +9,7 @@
  *   每次 ADC 扫描产生 4 个结果 → 按通道顺序写入 DMA buffer
  *   前半 buffer[0..39], 后半 buffer[40..79], 各含 4ch × 10 样本。
  *
- * ⚠️ 句柄单一来源: hadc1/hdma_adc1 来自 main.c, 经 main.h extern。
- *
- * 🔧 算法：中值+均值复合滤波
- *   📐 数学原理：对每通道 10 个过采样点排序, 去掉 1 个最大 + 1 个最小 (剔除脉冲
- *      噪声), 对中间 8 点取算术平均 (平滑随机噪声)。
- *   💻 代码映射：BubbleSort → 去 sorted[0]/sorted[N-1] → sum/(N-2)。
- *   ⚠️ 常见坑：单纯均值会被单个 4095 尖峰严重拉偏; 单纯中值丢失平滑性。复合更稳。
+ *  算法：中值+均值复合滤波
  */
 
 
@@ -98,7 +93,7 @@ void HAL_ADC_ConvHalfCpltCallback(ADC_HandleTypeDef *hadc)
     if (adc_event_queue != NULL) {
         /*
          * 队列深度=2, 即便任务暂时没取, HT 和 TC 两条事件也都能入队,
-         * 不会像二值信号量那样把两次事件合并成一次 (根治 #16)。
+         * 不会像二值信号量那样把两次事件合并成一次。
          */
         xQueueSendFromISR(adc_event_queue, &half_index, &xHigherPriorityTaskWoken);
     }

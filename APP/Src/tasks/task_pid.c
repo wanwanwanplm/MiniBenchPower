@@ -39,8 +39,6 @@
  * DAC 映射公式：
  *   DAC#2 (线性栅极): V_out = V_DAC2 × 10 → code2 = PID 输出直接用, 限幅 3475
  *   DAC#1 (Buck FB) : V_buck = 32.5 - 10×V_DAC1, 取 V_buck=V_out+2V 预稳压反解
- *   硬件假设来源: docs/03-interface-definition.md 第4.1/4.2 节 (v2.0),
- *                hardware/schematic.md 模块 ④/⑧ (v2.0)
  */
 
 #include "task_pid.h"
@@ -74,7 +72,7 @@ static float g_ss_v = 0.0f;         /* 软启动当前电压目标 (ramp 中间�
 static float g_ss_i = 0.0f;         /* 软启动当前电流目标 (ramp 中间值) */
 
 /*
- * #8/#13 关键: 记住"上一次同步给 PID 的用户设定值"。
+ * 关键: 记住"上一次同步给 PID 的用户设定值"。
  * 用它和最新 AppState 设定比较, 判断"用户是否真的改了设定"。
  * 只有真的改了才触发相应动作 (重启 ramp), 而不是每周期都动 setpoint。
  */
@@ -110,7 +108,7 @@ static uint8_t setting_changed(float a, float b)
  * @brief 单方向 ramp 推进: 把 *cur 朝 target 迈一步 (步长 SOFT_START_STEP)
  * @return 1 = 已到达 target, 0 = 仍在途中
  * ramp_step(&g_ss_v, g_last_v_set)
- * 支持双向: target 比当前大则上升, 比当前小则下降 (运行中调低设定 #13)。
+ * 支持双向: target 比当前大则上升, 比当前小则下降。
  */
 static uint8_t ramp_step(float *cur, float target)
 {
@@ -202,7 +200,7 @@ void vTaskPID(void *argument)
 
     for (;;) {
         /*──────────────────────────────────────────────────
-         * Step 1: 读最新 ADC 反馈 (#12 走 AppState, 拿一致快照)
+         * Step 1: 读最新 ADC 反馈 (走 AppState, 拿一致快照)
          *   不再用 adc_queue。AppState_GetADC 内部临界区保护, 防撕裂读。
          *──────────────────────────────────────────────────*/
         AppState_GetADC(&adc_data);
@@ -231,7 +229,7 @@ void vTaskPID(void *argument)
         }
 
         /*──────────────────────────────────────────────────
-         * Step 3: 读设定 (#12 走 AppState, 一致快照)
+         * Step 3: 读设定 (走 AppState, 一致快照)
          *──────────────────────────────────────────────────*/
         AppState_GetSetting(&setting);
 
@@ -269,11 +267,9 @@ void vTaskPID(void *argument)
             g_last_i_set = setting.i_set;
         } else {
             /*──────────────────────────────────────────────
-             * Step 6: 运行中检测用户改设定 (#8 检测 + #13 重启 ramp)
-             *
-             * 只有"真的变了"才动作 —— 这正是修掉 #8 的关键 (旧代码无条件动)。
+             * Step 6: 运行中检测用户改设定 (检测 + 重启 ramp)
              * 运行中改设定: 不瞬间跳变、不清积分, 而是重启 ramp 从当前 ramp 值
-             * 平滑过渡到新目标 (#13)。ramp 期间用 UpdateSetpointNoReset 保留积分。
+             * 平滑过渡到新目标。ramp 期间用 UpdateSetpointNoReset 保留积分。
              *──────────────────────────────────────────────*/
             if (setting_changed(setting.v_set, g_last_v_set)) {
                 g_last_v_set = setting.v_set;
@@ -289,9 +285,9 @@ void vTaskPID(void *argument)
          * Step 7: 软启动状态机推进
          *
          * RAMPING: 每周期把 ss_v/ss_i 朝 last_v_set/last_i_set 迈一步, 并用
-         *          UpdateSetpointNoReset 更新 PID setpoint —— 不清积分 (#8)。
+         *          UpdateSetpointNoReset 更新 PID setpoint —— 不清积分。
          *          两路都到达目标 → 切回 IDLE。
-         * IDLE   : 不动 setpoint —— 让积分持续累积消除静差 (#8 稳态)。
+         * IDLE   : 不动 setpoint —— 让积分持续累积消除静差。
          *──────────────────────────────────────────────────*/
         if (g_ss_state == SS_RAMPING) {
             uint8_t v_done = ramp_step(&g_ss_v, g_last_v_set);

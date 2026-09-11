@@ -40,7 +40,7 @@ extern "C" {
 
 /*
  * 磨损均衡: 页内每条记录占 EEPROM_RECORD_SIZE 字节 (含 2B magic + 数据 + padding)。
- * [问题 #4] RECORD_SIZE 64→128: 因 EEPROM_Config_t=76B 超过 64-4。
+ * RECORD_SIZE 64→128: 因 EEPROM_Config_t=76B 超过 64-4。
  * 一页可存 1024/128 = 8 条记录, 写满才擦整页。
  */
 #define EEPROM_RECORD_SIZE          128

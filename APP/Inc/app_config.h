@@ -191,15 +191,11 @@ extern "C" {
  * V_IN_SENSE 分压比 [v2.0: 从 1/12 改为 1/7.25]
  * 分压网络: R_top=75k, R_bot=12k → 分压比 = 12/(75+12) = 1/7.25
  * V_in = ADC × 3.3 / 4096 × 7.25
- * 硬件假设来源：docs/03-interface-definition.md 第 2.4 节 (v2.0)
- *              hardware/schematic.md 模块 ② (v2.0)
  */
 #define V_IN_DIVIDER_RATIO      7.25f           /* V_in 分压比倒数 (75k+12k → 1/7.25) */
 
 /*
  * V_OUT_SENSE 分压比
- * 来源：问题 #26 —— 原来该系数 10 硬编码在 adc.c 里，现集中到此处统一管理，
- *       避免魔法数字散落各处（与本文件"配置集中管理"原则一致）。
  * 分压网络对 V_out 采样: 分压比 = 1/10，故还原公式:
  *   V_out = ADC × 3.3 / 4096 × 10.0
  */
@@ -241,7 +237,7 @@ extern "C" {
 #define ENCODER_ACCEL_THRESHOLD 50              /* 加速阈值 (脉冲/秒) */
 #define ENCODER_ACCEL_MULTIPLIER 4              /* 加速倍数 */
 #define ENCODER_LONG_PRESS_MS   1000            /* 长按时间阈值 (ms) */
-#define ENCODER_DOUBLE_CLICK_MS 300             /* 双击间隔阈值 (ms) */
+#define ENCODER_DOUBLE_CLICK_MS 500             /* 双击间隔阈值 (ms) */
 #define BUTTON_DEBOUNCE_MS      20              /* 按键消抖时间 (ms) */
 
 /*===========================================================================
